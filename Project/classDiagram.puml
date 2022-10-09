@@ -1,0 +1,699 @@
+@startuml
+
+class GameStarter{
+    + main(List<String>) : void
+    + GameStarterWrapper(String path, int port, long seed, int timeout): void
+    - initializeRandom(int seed) : void
+    - createMonsters(JSONObject informationJSON) : List<Monster>
+    - createAdventurers(JSONObject informationJSON) : List<Adventurer>
+    - createTraps(JSONObject informationJSON) : List<Trap>
+    - createRooms(JSONObject informationJSON) : List<Room>
+    - createGameDataClass(List<Adventurer>,List<Monster>,List<Trap>,List<Room>)) : GameDataClass
+    - createNewServer(int port, int timeout, String JSONString) : Server
+}
+GameStarter o-- Server
+
+class Parser{
+    + readConfig(String configPath) : String
+    + parseConfig(String ConfigJSON) : JSONObject
+    + checkConfig(JSONObject informationJSON) : boolean
+}
+Parser - GameStarter
+
+class ServerConnection{
+    + sendActNow(int commID) : void
+    + sendActionFailed(int commID, String message) : void
+    + sendAdventurerArrived(int commID, int adventurer, int player) : void
+    + sendAdventurerDamaged(int commID, int adventurer, int amount, int player) : void
+    + sendAdventurerDrawn(int commID, int adventurer) : void
+    + sendAdventurerFled(int commID, int adventurer) : void
+    + sendAdventurerHealed(int commID, int amount, int priest, int target) : void
+    + sendAdventurerImprisoned(int commID, int adventurer, int player) : void
+    + sendBiddingStarted(int commID) : void
+    + sendConfig(int commID, String config) : void
+    + sendDefendYourself(int commID) : void
+    + sendDigTunnel(int commID) : void
+    + sendEvilnessChanged(int commID, int amount, int player) : void
+    + sendFoodChanged(int commID, int amount, int player) : void
+    + sendGameEnd(int commID, int player, int points) : void
+    + sendGameStarted(int commID) : void
+    + sendGoldChanged(int commID, int amount, int player) : void
+    + sendSelectMonster(int commID) : void
+    + sendImpsChanged(int commID, int amount, int player) : void
+    + sendLeft(int commID, int player) : void
+    + sendMonsterDrawn(int commID, int monster) : void
+    + sendMonsterHired(int commID, int monster, int player) : void
+    + sendMonsterPlaced(int commID, int monster, int player) : void
+    + sendNextRound(int commID, int round) : void
+    + sendNextYear(int commID, int year): void
+    + sendBidPlaced(int commID, BidType bid, int player, int slot): void
+    + sendBidRetrieved(int commID, BidType bid, int player): void
+    + sendPlayer(int commID, String name, int player): void
+    + sendRegistrationAborted(int commID,): void
+    + sendTunnelConquered(int commID, int adventurer, int x, int y): void
+    + sendTunnelDug(int commID, int player, int x, int y): void
+    + sendPlaceRoom(int commID) : void
+    + sendBattleGroundSet(int commID, int player, int x, int y) : void
+    + sendRoomActivated(int commID, int player, int room) : void
+    + sendRoomDrawn(int commID, int room) : void
+    + sendTrapAcquired(int commID, int player, int trap) : void
+    + sendTrapPlaced(int commID, int player, int trap) : void
+}
+
+
+class Server{
+    - playerIDs : List<int>
+    - commIDs : HashMap<int,int>
+    - playerNames : HashMap<int,String>
+    - game : GameDataClass
+    - connection : ServerConnection
+    - currentState : State
+    - maxPlayers : int
+    - maxYears : int
+    - port : int
+    - timeout : int
+    - configJSONString : String
+    - maxSideLength:int
+    - Terminate: boolean
+    +Server( GameDataClass game, int timeout,int maxPlayers,
+     int maxYears, int port, String configJSONString)
+    + run()
+        'currentState = RegistrationPhase;
+        'RegistrationPhase.run(this);
+    + evaluateGame() : void
+    + removeDungeonLord(int playerID) : void
+    + removeCommID(int commID) : void
+    + getNextAction() : Action
+        'Action.execute will run the action logic in the phase
+    + updateCurrentState(State newState) : void
+        'currentState = newState;
+        'newState.run(this);
+    + getCurrentState() : State
+    + getServerConnection() : ServerConnection
+    + getGameDataClass() : GameDataClass
+    + addCommID(int commID, int playerID) : void
+    + addPlayerID(int playerID): void
+    + addPlayerName(int playerID, String playerName) : void
+    + getPlayerByCommId(int commID) : int
+    + getAllPlayerIDs() : List<int>
+    + getNumberOfPlayer() : int
+            'Individual Events'
+            + ActNow(int commID) : void
+            + ActionFailed(int commID, String message) : void
+            + Config(int commID, String config) : void
+            + DefendYourself(int commID) : void
+            + DigTunnel(int commID) : void
+            + PlaceRoom(int commID) : void
+            + SelectMonster(int commID) : void
+            'Broadcast Events'
+            + ActNowBroadcast() : void
+            + AdventurerArrivedBroadcast(int adventurer, int player) : void
+            + AdventurerDamagedBroadcast(int adventurer, int amount, int player) : void
+            + AdventurerDrawnBroadcast(int adventurer) : void
+            + AdventurerFledBroadcast(int adventurer) : void
+            + AdventurerHealedBroadcast(int amount, int priest, int target) : void
+            + AdventurerImprisonedBroadcast(int adventurer, int player) : void
+            + BattleGroundSetBroadcast(int player, int x, int y) : void
+            + BiddingStartedBroadcast() : void
+            + EvilnessChangedBroadcast(int amount, int player) : void
+            + FoodChangedBroadcast(int amount, int player) : void
+            + GameEndBroadcast(int player, int points) : void
+            + GameStartedBroadcast() : void
+            + GoldChangedBroadcast(int amount, int player) : void
+            + ImpsChangedBroadcast(int amount, int player) : void
+            + LeftBroadcast(int player) : void
+            + MonsterDrawnBroadcast(int monster) : void
+            + MonsterHiredBroadcast(int monster, int player) : void
+            + MonsterPlacedBroadcast(int monster, int player) : void
+            + NextRoundBroadcast(int round) : void
+            + NextYearBroadcast(int year): void
+            + BidPlacedBroadcast(BidType bid, int player, int slot): void
+            + BidRetrievedBroadcast(BidType bid, int player): void
+            + PlayerBroadcast(String name, int player): void
+            + RegistrationAbortedBroadcast(): void
+            + RoomActivatedBroadcast(int player, int room) : void
+            + RoomDrawnBroadcast(int room) : void
+            + TrapAcquiredBroadcast(int player, int trap) : void
+            + TrapPlacedBroadcast(int player, int trap) : void
+            + TunnelConqueredBroadcast(int adventurer, int x, int y): void
+            + TunnelDugBroadcast(int player, int x, int y): void
+}
+ServerConnection --o Server
+
+
+package DataPackage {
+
+enum BidType{
+    FOOD, NICENESS, TUNNEL, COIN, IMP, TRAP, MONSTER, ROOM
+}
+
+
+class Resources{
+    - coins : int
+    - evilness : int
+    - imps : int
+    - foods : int
+    - busyImps : int
+    + Resources(int coins , int evilness, int imps,int food)
+    +getCoins():int
+    +getEvilness():int
+    +getImps():int
+    +getFood():int
+    +changeCoins(int amount):boolean
+    +changeEvilness(int amount):boolean
+    +changeImps(int amount):boolean
+    +changeFood(int amount):boolean
+    +canResourcesBeSubtracted(Resources cost):boolean
+    +resetBusyImps():void
+
+
+
+}
+BidOption o-- Resources
+DungeonLord o-- Resources
+
+class GameDataClass{
+    - season : int
+    - years : int
+    - dungeonLords : HashMap<int,DungeonLord>
+    - adventurers : HashMap<int,Adventurer>
+    - adventurerPool : List<Adventurer>
+    - trapPool : List<Trap>
+    - roomPool : List<Room>
+    - monsters : HashMap<int,Monster>
+    - monsterPool : List<Monster>
+    - rooms : List<Room>
+    - biddingSquare : BiddingSquare
+
+    +GameDataClass( List<Adventurer> adventurerPool, List<Trap> trapPool,
+     List<Room> roomPool, List<Monster> monsterPool,int maxSideLength)
+     + getDungeonLord(int id) : DungeonLord
+     + getAllDungeonLords() : List<DungeonLord>
+     + getAdventurer(int id) : Adventurer
+     + getAllAdventurers() : List<Adventurer>
+     + getMonster(int id) : Monster
+     + getAllMonsters() : List<Monster>
+     + getBiddingSquare() : BiddingSquare
+     + isMonsterAvailable(int monster) : boolean
+     + addDungeonLord(DungeonLord dungeonLord) : int
+     + getBidStarter() : int
+     + calculateNextBidStarter() : void
+     + getNextTrap() : Trap
+     + updateMonstersRooms() : void
+     + updateAdventurers() : void
+     + removeDungeonLord() : void
+}
+Server o-- GameDataClass
+GameDataClass o- Adventurer
+GameDataClass o- Trap
+GameDataClass o- Room
+
+class Dungeon{
+
+    - adventurerQueue : List<Adventurer>
+    - capturedAdventures : Queue<Adventurer>
+    - DungeonGraph: Tunnel[][]
+    - maxSideLength:int
+    - currentX: int
+    - currentY: int
+    - activeDungeonLength:int
+    - conqueredDungeonLength :int
+    + Dungeon(int maxSideLength)
+    + captureAdventurer(Adventurer adventurer) : void
+    + isThereCapturedAdventurers():boolean
+    + releaseAdventurer() : int
+    + queueAdventurer(Adventurer adventurer) : void
+    + resetAdventurersQueue():void
+    + getActiveDungeonLength() : int
+    + getConqueredDungeonLength(): int
+    + digTunnel(int x , int y) :boolean
+    - canWeDigHere(int x , int y): boolean
+    + buildRoom( int x , int y , Room room ):boolean
+    - isRestrictionFulfilled(int x , int y , RoomRestriction rest):boolean
+    + setBattleGround(int x, int y):boolean
+    - bfsDungeon(int x int y): boolean
+    - inBoundaries(int x , int y): boolean
+    - isTunnel(int x, int y):boolean
+    + isBattleGroundRoom(): boolean
+    + conquerCurrentTile():void
+
+}
+
+class Tunnel{
+    -Conquered:boolean
+    +isConquered():boolean
+    +isRoom():boolean
+}
+Dungeon o-- Tunnel
+class Room{
+    -id:int
+    -restriction:RoomRestriction
+    - impsCost: int
+    - rewards : Resources
+    - activated : boolean
+    + Room(int id, RoomRestriction restriction, int cost ,Resources resources)
+    +isRoom():boolean
+    +activate():void
+    +deactivate():void
+    +isActive():boolean
+    +getRewards(): resources
+}
+DungeonLord o-- Room
+
+Tunnel <|-- Room
+enum RoomRestriction{
+    UPPER-HALF,LOWER-HALF,INNER,OUTER
+}
+Room o-- RoomRestriction
+
+
+class DungeonLord{
+    - playerID : int
+    - dungeon : Dungeon
+    - monsters : HashMap<int,Monster>
+    - tiredMonsters: HashMap<int,Monsters>
+    - traps : HashMap<int,Trap>
+    - rooms : hashmap<int,Room>
+    - biddings : HashMap<int,BidType>
+    - lockedBiddings : List<BidType>
+    - resources: Resources
+    - alreadyBid : int
+    + DungeonLord(int id,int maxSideLength)
+    + getId() : int
+    + getDungeon() : Dungeon
+    + addLockedBiddings(BidType bid) : void
+    + getLockedBiddings() : List<BidType>
+    + addBiddings(BidType bid, int number) : boolean
+    + removeBiddings(int number) : void
+    + getBiddings(int number) : BidType
+    + addMonster(Monster monster) : void
+    + monsterGotTired(int id):void
+    + monstersAreRested():void
+    + addTrap(Trap trap) : void
+    + impsAreDone():void
+    + getMonsterAmount() : int
+    + activateRoom(int id):boolean
+}
+
+DungeonLord o-- Dungeon
+class Trap{
+    - id : int
+    - damage : int
+    - target : int
+    - attackStrategy : AttackStrategy
+    + Trap(int id,int damage,int target, AttackStrategy attackStrategy)
+    + getId() : int
+    + getTarget() : int
+    + getDamage() : int
+    + getAttackStrategy() : AttackStrategy
+}
+DungeonLord o-- Trap
+class Monster{
+    - id : int
+    - hunger : int
+    - evilness : int
+    - damage : int
+    - attackStrategy : AttackStrategy
+    + Monster(int id, int hunger,int evilness,int damage,AttackStrategy attackStrategy)
+    + getId() : int
+    + getHunger() : int
+    + getEvilness() : int
+    + getDamage() : int
+    + getAttackStrategy() : AttackStrategy
+}
+DungeonLord o-- Monster
+
+enum AttackStrategy{
+    BASIC,MULTI,TARGETED
+}
+Monster o-- AttackStrategy
+Trap o-- AttackStrategy
+GameDataClass o-- Monster
+
+class Adventurer{
+    - id : int
+    - difficulty : int
+    - healthPoints : int
+    - healValue : int
+    - defuseValue : int
+    - charge : boolean
+    + Adventurer(int id, int difficulty,int healthPoints, int healValue, int defuseValue, boolean charge)
+    + getId() : int
+    + getDifficulty() : int
+    + getHealValue() : int
+    + getDefuseValue() : int
+    + getCharge() : boolean
+    + getHP() : int
+    + takeDamage(int damage) : void
+    + takeHeal(int healValue) : void
+}
+BidOption o-- DungeonLord
+GameDataClass o-- DungeonLord
+
+class BiddingSquare{
+    - bidOptions : HashMap<BidType,BidOption>
+    - dungeonLords : LinkedList<int>
+    + getOption(BidType) : BidOption
+    + getAllOptions() : List<BidOption>
+}
+GameDataClass o-- BiddingSquare
+
+abstract class BidOption{
+    - dungeonLords : List<int>
+    - costs : List<Resources>
+    - rewards : List<Resources>
+    - bidType : BidType
+    + addDungeonLord(DungeonLord dungeonLord) : void
+    + removeDungeonLord(DungeonLord dungeonLord) : void
+    + getDungeonLordBySlotOrder(int number) : DungeonLord
+    + getAllDungeonLords() : List<DungeonLord>
+    + resetDungeonLord() : void
+    + getNumberOfDungeonLord() : int
+}
+BiddingSquare o-- BidOption
+
+class BidFactory{
+    + createFoodOption() : BidOption
+    + createNicenessOption() : BidOption
+    + createTunnelOption() : BidOption
+    + createCoinOption() : BidOption
+    + createImpOption() : BidOption
+    + createTrapOption() : BidOption
+    + createMonsterOption() : BidOption
+    + createRoomOption() : BidOption
+}
+BidOption - BidFactory
+
+}
+
+package ActionPackage{
+
+interface ActionFactory<Actions>{
+createEndTurnAction() : EndTurnAction
+createLeaveAction() : LeaveAction
+createMonsterAction(int monster) : MonsterAction
+createMonsterTargetedAction(int monster, int position) : MonsterTargetedAction
+createHireMonster(int monster) : HireMonsterAction
+createPlaceBidAction(BidType bid, int number) : PlaceBidAction
+createRegisterAction(String playerName) : RegisterAction
+createStartGameAction() : StartGameAction
+createActivateRoomAction(int room) : ActivateRoomAction
+createBattleGroundAction(int x, int y) : BattleGroundAction
+createDigTunnelAction(int x, int y) : DigTunnelAction
+createTrapAction(int trapID) : TrapAction
+createBuildRoomAction(int x, int y, int roomID) : BuildRoomAction
+
+}
+class ConcreteActionFactory<Actions>{
+createEndTurnAction() : EndTurnAction
+createLeaveAction() : LeaveAction
+createMonsterAction(int monster) : MonsterAction
+createMonsterTargetedAction(int monster, int position) : MonsterTargetedAction
+createHireMonster(int monster) : HireMonsterAction
+createPlaceBidAction(BidType bid, int number) : PlaceBidAction
+createRegisterAction(String playerName) : RegisterAction
+createStartGameAction() : StartGameAction
+createActivateRoomAction(int room) : ActivateRoomAction
+createBattleGroundAction(int x, int y) : BattleGroundAction
+createDigTunnelAction(int x, int y) : DigTunnelAction
+createTrapAction(int trapID) : TrapAction
+createBuildRoomAction(int x, int y, int roomID) : BuildRoomAction
+
+}
+ActionFactory <|.. ConcreteActionFactory
+
+abstract Actions{
+    - commID : int
+    + getCommId() : int
+
+}
+class EndTurnAction{
+
+}
+Actions <|-- EndTurnAction
+
+class HireMonsterAction{
+
+}
+Actions <|-- HireMonsterAction
+
+class LeaveAction{
+
+}
+Actions <|-- LeaveAction
+
+class MonsterAction{
+    - monster : int
+
+}
+Actions <|-- MonsterAction
+
+class MonsterTargetedAction{
+    - monster : int
+    - position : int
+
+}
+Actions <|-- MonsterTargetedAction
+
+class PlaceBidAction{
+    - BidType : bid
+    - number : int
+
+}
+Actions <|-- PlaceBidAction
+
+class RegisterAction{
+    - playerName : String
+
+}
+Actions <|-- RegisterAction
+
+class StartGameAction{
+
+}
+Actions <|-- StartGameAction
+
+class ActivateRoomAction{
+    - room : int
+}
+Actions <|-- ActivateRoomAction
+
+class BattleGroundAction{
+    - x : int
+    - y : int
+}
+Actions <|-- BattleGroundAction
+
+class DigTunnelAction{
+    - x : int
+    - y : int
+}
+Actions <|-- DigTunnelAction
+
+class TrapAction{
+    - trapID : int
+}
+Actions <|-- TrapAction
+
+class BuildRoomAction{
+    - x : int
+    - y : int
+    - roomID : int
+}
+Actions <|-- BuildRoomAction
+}
+
+package GameLogic {
+
+abstract class State{
+   - server : Server
+   + run()
+   + actOn(RegisterAction ac) : void
+   + actOn(StartGameAction ac) : void
+   + actOn(EndTurnAction ac) : void
+   + actOn(HireMonsterAction ac) : void
+   + actOn(LeaveAction ac) : void
+   + actOn(MonsterAction ac) : void
+   + actOn(MonsterTargetedAction ac) : void
+   + actOn(PlaceBidAction ac) : void
+   + actOn(ActivateRoomAction ac) : void
+   + actOn(BattleGroundAction ac) : void
+   + actOn(DigTunnelAction ac) : void
+   + actOn(TrapAction ac) : void
+   + actOn(BuildRoomAction ac) : void
+   + subtractResources(DungeonLord lord, Resources costs)
+   + addResources(DungeonLord lord, Resources rewards)
+   }
+   Server o-- State
+
+   'Action Factory creator will extend ActionFactory'
+   class RegistrationPhase{
+       - isStartGame : boolean
+       - registeredPlayer : int
+       + run() : void
+       + actOn(RegisterAction ac) : void
+       + actOn(StartGameAction ac) : void
+       + actOn(EndTurnAction ac) : void
+       + actOn(HireMonsterAction ac) : void
+       + actOn(LeaveAction ac) : void
+       + actOn(MonsterAction ac) : void
+       + actOn(MonsterTargetedAction ac) : void
+       + actOn(PlaceBidAction ac) : void
+       + actOn(ActivateRoomAction ac) : void
+       + actOn(BattleGroundAction ac) : void
+       + actOn(DigTunnelAction ac) : void
+       + actOn(TrapAction ac) : void
+       + actOn(BuildRoomAction ac) : void
+       - startGame() : void
+   }
+   State <|-- RegistrationPhase
+
+
+   class BiddingPhase{
+       - numberOfBids : int
+       + run() : void
+       + actOn(PlaceBidAction ac) : void
+       + actOn(LeaveAction ac) : void
+       - drawNewAdventurer(GameDataClass gd) : void
+       - drawNewMonster(GameDataClass gd) : void
+       - drawNewRoom(GameDataClass gd) : void
+   }
+   State <|-- BiddingPhase
+
+   class EvaluationPhase{
+       - bidInCoinOption : boolean
+       + run()
+       - placeBidInAllOptions(BiddingSquare bs) : void
+       ' this method is for evaluating FoodOption, NicenessOption, ImpOption
+       - evaluateDefault(BidOption bo) : void
+        - evaluateTunnel(BidOption bo) : void
+       - evaluateCoin(BidOption bo) : boolean
+       - evaluateTrap(BidOption bo) : void
+       - evaluateMonster(BidOption bo) : void
+       - evaluateRoom(BidOption bo) : void
+       - drawNewTrap(int number) : List<Trap>
+       - giveRewardFromCoinOption(BidOption bo) : void
+       - resetOptions(List<BidOption>) : void
+       - resetDungeonLords(List<DungeonLord> dungeonLords)
+       - giveRewardFromRoom(List<DungeonLord> dungeonLords) : void
+       - spreadAdventurer(List<DungeonLord> dungeonLords) : void
+       - changeOrderPlayer(BiddingSquare bs) : void
+       - nextSeason() : void
+       - incrementSeason() : void
+       - resetSeason() : void
+
+   }
+   State <|-- EvaluationPhase
+
+   class DigTunnelPhase{
+   - currentDungeonLord : DungeonLord
+   - expectedActOn : boolean
+   - bidOption : BidOption
+   + DigTunnelPhase(Server s, BidOption bo)
+   + run()
+   + actOn(DigTunnelAction ac) : void
+   + actOn(LeaveAction ac) : void
+   }
+   State <|-- DigTunnelPhase
+   DigTunnelPhase o-- BidOption
+
+   class HireMonsterPhase{
+   - currentDungeonLord : DungeonLord
+   - expectedActOn : boolean
+   - bidOption : BidOption
+   + HireMonsterPhase(Server s, BidOption bo)
+   + run() : void
+   + actOn(HireMonsterAction ac) : void
+   + actOn(LeaveAction ac) : void
+   }
+   State <|-- HireMonsterPhase
+   HireMonsterPhase o-- BidOption
+
+   class BuildRoomPhase{
+   - currentDungeonLord : DungeonLord
+   - expectedActOn : boolean
+   - bidOption : BidOption
+   + BuildRoomPhase(Server s, BidOption bo)
+   + run() : void
+   + actOn(BuildRoomAction ac) : void
+   + actOn(LeaveAction ac) : void
+   }
+   State <|-- BuildRoomPhase
+   BuildRoomPhase o-- BidOption
+
+class BattleGroundSettingPhase{
+    - expectedActOn : boolean
+    - currentCommandID : int
+    + BattleGroundSettingPhase(int currentCommandID)
+    + run() : void
+    + actOn(BattleGroundAction) : void
+    + actOn(LeaveAction ac) : void
+}
+BattleGroundSettingPhase --|> State
+
+class CombatPhase{
+        - CurrentCommandID : int
+        - NumberMonsters : int
+        - List<Monster> : Monster
+        - NumberTraps : int
+        - List<Trap> : Trap
+        - expectedActOn : boolean
+        - round : int
+        + run() : void
+        + actOn(EndTurnAction ac) : void
+        + actOn(MonsterAction ac) : void
+        + actOn(MonsterTargetedAction ac) : void
+        + actOn(TrapAction) : void
+        + actOn(ActivateRoomAction ac) : void
+        + actOn(LeaveAction ac) : void
+        - DoOneRound() : void
+        - TrapDamageExecute() : void
+        - monsterDamageExecute() : void
+        - fatigueDamageExecute() : void
+        - checkHP() : void
+        'and capture'
+        - conquerExecute() : void
+        - healExecute() : void
+        - nextRound() : void
+        - nextPlayer() : void
+        - nextYear() : void
+        - removeDungeonLord() : void
+        - updateListDungeonLord() : void
+}
+
+CombatPhase o-- Monster
+CombatPhase o-- Trap
+State <|-- CombatPhase
+State o-- Server
+}
+
+
+DungeonLord o-- BidType
+BidOption o-- BidType
+
+
+class GameEvaluator{
+    - lordPoints : hashmap< int -> int>
+    + GameEvaluator(List<DungeonLord> dungeonLords)
+    + evaluate() : void
+    + getEvaluation() : hashmap<DungeonLord -> int>
+    + getHighestScoringDungeonLords() : List<DungeonLord>
+    + getHighscore() : int
+    - evaluateMonsters() : void
+    - evaluateRooms() : void
+    - evaluateConqueredTiles() : void
+    - evaluateImprisonedAdventurers() : void
+    - evaluateLordOfDarkDeeds() : List<DungeonLord>
+    - evaluateLordOfHalls() : List<DungeonLord>
+    - evaluateTunnelLord() : List<DungeonLord>
+    - evaluateMonsterLord() : List<DungeonLord>
+    - evaluateLordOfImps() : List<DungeonLord>
+    - evaluateLordOfRiches() : List<DungeonLord>
+    - evaluateBattleLord() : List<DungeonLord>
+    - evaluateTitles() : void
+    - addTitlePoints() : void
+}
+
+Server - GameEvaluator
+
+@enduml

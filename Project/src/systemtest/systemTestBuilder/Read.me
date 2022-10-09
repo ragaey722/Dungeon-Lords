@@ -1,0 +1,35 @@
+Use the doRegister.patch file to change which Systemtests are active
+(+ activates, - deactivates, all other are ignored, not mentioning also activates)
+
+Use the runSystemTestPrep.py python file to compile and register the Systemtests
+
+Write Systemtests in systemTestShortfiles and save them as .txt files
+the style to write is
+
+Startcharacter:
+  event : >
+  broadcast : >>
+  action : <
+
+event/action:
+  full : actNow
+  short : aN
+  it is also case insensitive, so it doesn't matter if one writes an, AN, An or aN
+  if a short name is not yet in the library, just add it
+  (pythonLogic/test_builder_data.py -> extend action_dict or event_dict)
+
+Arguments:
+  after event and action (not broadcast) a player reference is expected
+  a player is introduced with register action and cant be used after leave action
+  player reference : a_unique_string_without_spaces
+
+  then all other arguments that the event or action takes are expected
+  IMPORTANT: at the moment strings have to be entered as "String"
+
+Example:
+  < reg P1 "Niklas"
+  > config P1 config
+  < regiSTER p2 "Maxi"
+  > config p2 config
+  < l P1
+  < leave p2

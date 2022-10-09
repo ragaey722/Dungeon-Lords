@@ -1,0 +1,45 @@
+{
+  "$defs": {
+    "room": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "main.schema#/$defs/id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "activation": {
+          "$comment": "Number of required imps.",
+          "type": "number",
+          "minimum": 1
+        },
+        "restriction": {
+          "enum": ["UPPER_HALF","LOWER_HALF","OUTER_RING","INNER_RING"]
+        },
+        "food": {
+          "type": "number",
+          "minimum": 0
+        },
+        "gold": {
+          "type": "number",
+          "minimum": 0
+        },
+        "imps": {
+          "type": "number",
+          "minimum": 0
+        },
+        "niceness": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "activation",
+        "restriction"
+      ],
+      "type": "object"
+    }
+  }
+}

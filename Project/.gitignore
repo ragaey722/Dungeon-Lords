@@ -1,0 +1,16 @@
+.idea/
+.gradle/
+build/
+out/
+gradle/
+docs/
+libs/
+
+gradlew
+gradlew.bat
+/bin/
+.classpath
+.project
+src/.classpath
+src/.gitignore
+src/.gitignore
